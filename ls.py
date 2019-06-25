@@ -23,6 +23,8 @@ def ls(nombres):
 	parser.add_argument('-t',
 		help='Ordena segun fecha de modificacion en lugar de alfabetico')
 
+	flags = parser.parse_args()
+
 	if nombres:
 		files = []
 		dirs = []
@@ -40,14 +42,19 @@ def ls(nombres):
 		files.sort()
 		dirs.sort()
 		for f in files:
-			print(str(f), end='\t')
+			print(f, end='\t')
 		for d in dirs:
-			d = str(d)
-			print (d + ':')
-			print(path + '/' + d)
-			archivosDir = os.listdir(path + '/' + d).sort()
-			for arch in archivosDir:
-				print(arch)
+			print(d + ':')
+			archivosDir = os.listdir(d)
+			archivosDir.sort()
+			if flags.all:
+				for arch in archivosDir:
+					print(arch, end='\t')
+			else:
+				for arch in archivosDir:
+					if not arch.startswith('.'):
+						print(arch, end='\t')
+			print()
 	else:
 		if not myall:
 			contenido = listaSinPunto(contenido)
@@ -67,8 +74,7 @@ def listaSinPunto(lista):
 	return lista
 
 def main():
-	ls(input('>>> '))
-
+	ls(input('>>>'))
 
 if __name__ == '__main__':
 	main()

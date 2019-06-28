@@ -55,7 +55,7 @@ def truco():
                     ((puntajes["Piezas"])[i])[0] = 12
 
     print("La muestra es de " + str(muestra))
-    for i in range(0,3):
+    for i in range(0,4):
         print("El jugador " + str(i) + " tiene las cartas: " + str(jugadores[str(i)]))
         if(checkForFlor(jugadores[str(i)], muestra, piezas)):
             puntos_flor = contarFlor(jugadores[str(i)], muestra, puntajes, piezas)
@@ -182,7 +182,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
-

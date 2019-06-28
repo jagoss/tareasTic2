@@ -1,8 +1,25 @@
-import json
 import random
 
 def truco():
-    DICT_TRUCO = json.load(open('truco.json'))  # abre el archivo y lo carga en un diccionario Python
+
+    DICT_TRUCO = {
+    "Mazo": {
+        "Oro": [1,2,3,4,5,6,7,10,11,12],
+        "Basto": [1,2,3,4,5,6,7,10,11,12],
+        "Copa": [1,2,3,4,5,6,7,10,11,12],
+        "Espada": [1,2,3,4,5,6,7,10,11,12]
+    },
+    "Jugadores": {
+        "0": [["palo",0],["palo",0],["palo",0]],
+        "1": [["palo",0],["palo",0],["palo",0]],
+        "2": [["palo",0],["palo",0],["palo",0]],
+        "3": [["palo",0],["palo",0],["palo",0]]
+    },
+    "Puntajes":{
+        "Piezas":[[2,30],[4,29],[5,28],[11,27],[10,27]],
+        "Blancas y Negras": [ [1,1],[2,2],[3,3],[4,4],[5,5],[6,6],[7,7],[8,0],[9,0],[10,0],[11,0],[12,0] ]
+    }
+}
 
     mazo = DICT_TRUCO["Mazo"]
     jugadores = DICT_TRUCO["Jugadores"]
@@ -37,15 +54,15 @@ def truco():
                 if(((puntajes["Piezas"])[i])[0] == muestra[1]):
                     ((puntajes["Piezas"])[i])[0] = 12
 
-
+    print("La muestra es de " + str(muestra))
     for i in range(0,3):
-        print("El jugador " + str(i) + "tiene las cartas: " + str(jugadores[str(i)]))
+        print("El jugador " + str(i) + " tiene las cartas: " + str(jugadores[str(i)]))
         if(checkForFlor(jugadores[str(i)], muestra, piezas)):
-            print("FLOR de " + contarFlor(jugadores[str(i)], muestra, puntajes, piezas) + "puntos")
+            puntos_flor = contarFlor(jugadores[str(i)], muestra, puntajes, piezas)
+            print("FLOR de " + str(puntos_flor) + " puntos")
         else:
-            print("ENVIDO de " + contarEnvido(jugadores[str(i)], muestra, puntajes, piezas) + "puntos")
-
-
+            puntos_envido = contarEnvido(jugadores[str(i)], muestra, puntajes, piezas)
+            print("ENVIDO de " + str(puntos_envido) + " puntos")
 
 def checkForFlor(player, muestra, piezas):
     nroPiezas=0
@@ -75,11 +92,11 @@ def checkForFlor(player, muestra, piezas):
 
 def contarFlor(player, muestra, puntajes, piezas):
     scores = [0,0,0]
-    puntajesPiezas = puntajes[0]
-    puntajesNormales = puntajes[1]
+    puntajesPiezas = puntajes['Piezas']
+    puntajesNormales = puntajes['Blancas y Negras']
 
     # hallar los puntajes de cada carta.
-    for i in range(0,2):
+    for i in range(0,3):
         # ver si es una pieza
         if (muestra[0] == (player[i])[0] and ((player[i])[1] in piezas)):
             #buscar puntaje de la pieza
@@ -89,7 +106,10 @@ def contarFlor(player, muestra, puntajes, piezas):
                         scores[i] = (puntajesPiezas[j])[1]
         else:
             #guardar puntaje de carta que no es pieza
-            scores[i] = (puntajesNormales[(player[i])[1] - 1])[1]
+            nro_i_carta = player[i][1]
+            if nro_i_carta >= 10:
+                nro_i_carta -= 3
+            scores[i] = (puntajesNormales[nro_i_carta - 1])[1]
     # ordenarlos
     scores.sort(reverse=True)
     # quedarme con el primero pero entero
@@ -101,23 +121,27 @@ def contarFlor(player, muestra, puntajes, piezas):
     return puntajeTotal
 
 def hallarCasoEnvido(player, muestra, piezas):
-    for i in range(0, 2):
+    for i in range(0, 3):
         if (muestra[0] == (player[i])[0] and ((player[i])[1] in piezas)):
+            # caso 1 (una pieza en la posicion i)
             caso = [1,i,0]
             return caso
-    if((player[1])[0] == (player[2])[0]):
+    if((player[0])[0] == (player[1])[0]):
+        # dos cartas del mismo palo en posicion 0 y 1
+        caso = [2, 0, 1]
+        return caso
+    elif ((player[0])[0] == (player[2])[0]):
+        # dos cartas del mismo palo en posicion 0 y 2
+        caso = [2, 0, 2]
+        return caso
+    elif ((player[1])[0] == (player[2])[0]):
+        # dos cartas del mismo palo en posicion 1 y 2
         caso = [2, 1, 2]
         return caso
-    elif ((player[1])[0] == (player[3])[0]):
-        caso = [2, 1, 3]
-        return caso
-    elif ((player[2])[0] == (player[3])[0]):
-        caso = [2, 2, 3]
-        return caso
     else:
+        # todas las cartas de diferentes palos
         caso = [3, 0, 0]
         return caso
-
 
 def contarEnvido(player, muestra, puntajes, piezas):
     puntajeEnvido = 0
@@ -129,28 +153,32 @@ def contarEnvido(player, muestra, puntajes, piezas):
     # caso 1: 1 pieza
     if caso[0] == 1:
         miPieza = caso[1]
-        for i in range(0, 2):
-            if ((puntajesNormales[(player[i])[1] - 1] >= puntajeEnvido) and (miPieza != i)):
-                puntajeEnvido = puntajesNormales[(player[i])[1] - 1]
-        puntajeEnvido += (puntajesPiezas[caso[1]])[1]
+        for i in range(0, 3):
+            nro_i_carta = player[i][1]
+            if ((puntajesNormales[nro_i_carta - 1][1] >= puntajeEnvido) and (miPieza != i)):
+                puntajeEnvido = puntajesNormales[nro_i_carta - 1][1]
+        nro_mi_pieza = player[caso[1]][1]
+        for x in puntajesPiezas:
+            if x[0] == nro_mi_pieza:
+                puntajeEnvido += x[1]
 
     # caso 2: 2 palos iguales
     elif (caso[0] == 2):
-        puntajeEnvido = 20 + puntajesNormales[(player[caso[1]])[1] - 1 ] + puntajesNormales[(player[caso[2]])[1] - 1 ]
+        nro_primer_carta = player[caso[1]][1]
+        nro_segunda_carta = player[caso[2]][1]
+        puntajeEnvido = 20 + puntajesNormales[nro_primer_carta - 1][1] + puntajesNormales[nro_segunda_carta - 1][1]
 
     # caso 3: los 3 palos diferentes
     elif (caso[0] == 3):
-            puntajeEnvido = max(puntajesNormales[(player[0])[1] - 1], puntajesNormales[(player[1])[1] - 1], puntajesNormales[(player[2])[1] - 1])
-
+        nro_primer_carta = player[0][1]
+        nro_segunda_carta = player[1][1]
+        nro_tercer_carta = player[2][1]
+        puntajeEnvido = max(puntajesNormales[nro_primer_carta - 1][1], puntajesNormales[nro_segunda_carta - 1][1], puntajesNormales[nro_tercer_carta - 1][1])
 
     return puntajeEnvido
 
-
-
 def main():
     truco()
-
-
 
 if __name__ == '__main__':
     main()

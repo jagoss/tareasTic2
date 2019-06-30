@@ -5,6 +5,8 @@ from datetime import datetime
 import pwd
 import grp
 
+entrada = None
+
 
 def ls():
     flags = set_banderas()
@@ -14,6 +16,8 @@ def ls():
         lista_contenido.append(sd)
 
     if flags.nombres:
+        global entrada
+        entrada = flags.nombres
         lista_datos = tiene_nombres(flags, lista_contenido, path)
         imprimir_nombres(lista_datos[0], lista_datos[1], flags)
     else:
@@ -64,8 +68,8 @@ def tiene_nombres(flags, contenido, path):
         if not existe:
             print('ls: cannot access \'' + nombre + '\': No such file or directory')
     if not flags.all:
-        files = lista_sin_punto(files)
-        dirs = lista_sin_punto(dirs)
+        files = lista_nombres_sin_punto(files)
+        dirs = lista_nombres_sin_punto(dirs)
     files.sort()
     dirs.sort()
     return [files, dirs]
@@ -74,18 +78,38 @@ def tiene_nombres(flags, contenido, path):
 def get_lista_completa(lista_contenido):
     lista_final = list()
     for contenido in lista_contenido:
-        fecha = datetime.fromtimestamp(os.stat(contenido).st_mtime)
-        fecha = fecha.strftime('%b %d %H:%M')
-        permisos = oct(os.stat(contenido).st_mode)[-3:]
-        permisos = get_permisos(permisos)
-        usuario = pwd.getpwuid(os.stat(contenido).st_uid).pw_name
-        enlaces = os.stat(contenido).st_nlink
-        id_grupo = os.stat(contenido).st_gid
-        grupo = grp.getgrgid(id_grupo).gr_name
-        size = os.stat(contenido).st_size
-        nombre = contenido.name
-        lista_final.append([permisos, enlaces, usuario, grupo, size, fecha, nombre])
+        if type(contenido) is str:
+            guardar_info(contenido, lista_final, entrada)
+        else:
+            guardar_info(contenido.name, lista_final, entrada)
+
     return lista_final
+
+
+def obtener_padre(padres, hijo):
+    for padre in padres:
+        if os.path.isdir(os.getcwd() + '/' + padre):
+            hijos = os.listdir(padre)
+            for h in hijos:
+                if h == hijo:
+                    return padre
+
+
+def guardar_info(nombre_dato, lista, nombres):
+    if nombres is None:
+        ruta = nombre_dato
+    else:
+        ruta = obtener_padre(nombres, nombre_dato) + '/' + nombre_dato
+    fecha = datetime.fromtimestamp(os.stat(ruta).st_mtime)
+    fecha = fecha.strftime('%b %d %H:%M')
+    permisos = oct(os.stat(ruta).st_mode)[-3:]
+    permisos = get_permisos(permisos)
+    usuario = pwd.getpwuid(os.stat(ruta).st_uid).pw_name
+    enlaces = os.stat(ruta).st_nlink
+    id_grupo = os.stat(ruta).st_gid
+    grupo = grp.getgrgid(id_grupo).gr_name
+    size = os.stat(ruta).st_size
+    lista.append([permisos, enlaces, usuario, grupo, size, fecha, nombre_dato])
 
 
 def imprimir_lista_completa(lista_final):

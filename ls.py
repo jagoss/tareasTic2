@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+# Victoria Tejera, Juan Jose Regent y Juan Andres Gossweiler
 import os
 import argparse
 from datetime import datetime
@@ -87,19 +88,22 @@ def get_lista_completa(lista_contenido):
 
 
 def obtener_padre(padres, hijo):
+    salida = None
     for padre in padres:
         if os.path.isdir(os.getcwd() + '/' + padre):
             hijos = os.listdir(padre)
             for h in hijos:
                 if h == hijo:
-                    return padre
+                    salida = padre
+    return salida
 
 
-def guardar_info(nombre_dato, lista, nombres):
-    if nombres is None:
+def guardar_info(nombre_dato, lista, nombre):
+    padre = obtener_padre(nombre, nombre_dato)
+    if nombre is None or padre is None:
         ruta = nombre_dato
     else:
-        ruta = obtener_padre(nombres, nombre_dato) + '/' + nombre_dato
+        ruta = obtener_padre(nombre, nombre_dato) + '/' + nombre_dato
     fecha = datetime.fromtimestamp(os.stat(ruta).st_mtime)
     fecha = fecha.strftime('%b %d %H:%M')
     permisos = oct(os.stat(ruta).st_mode)[-3:]
@@ -137,6 +141,7 @@ def imprimir_nombres(files, dirs, flags):
         lista_imprimir = get_lista_completa(files)
         imprimir_lista_completa(lista_imprimir)
         for d in dirs:
+            print()
             print(d + ':')
             archivos_dir = os.listdir(d)
             archivos_dir.sort()
